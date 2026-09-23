@@ -1,0 +1,45 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Network;
+
+// Token: 0x02001105 RID: 4357
+public static class Auth_Steam
+{
+	// Token: 0x06007468 RID: 29800
+	public static IEnumerator Run(Connection connection)
+	{
+		connection.authStatusSteam = string.Empty;
+		if (!connection.active)
+		{
+			yield break;
+		}
+		if (connection.rejected)
+		{
+			yield break;
+		}
+		PlatformService.Instance.BeginPlayerSession(connection.userid, connection.token);
+		connection.authStatusSteam = "ok";
+		if (!string.IsNullOrEmpty(connection.username))
+		{
+			PlatformService.Instance.UpdatePlayerSession(connection.userid, connection.username);
+		}
+		yield break;
+	}
+
+	// Token: 0x06007469 RID: 29801
+	public static bool ValidateConnecting(ulong steamid, ulong ownerSteamID, AuthResponse response)
+	{
+		Connection connection = Auth_Steam.waitingList.Find((Connection x) => x.userid == steamid);
+		if (connection == null)
+		{
+			return false;
+		}
+		connection.ownerid = ownerSteamID;
+		connection.authStatusSteam = "ok";
+		return true;
+	}
+
+	// Token: 0x04006400 RID: 25600
+	internal static List<Connection> waitingList = new List<Connection>();
+}
